@@ -91,7 +91,7 @@ class BackyardFlyer(Drone):
         # code starting point is up_and_down.py from Lesson: "Project: Backyard Flyer, #11"
         print("arming transition")
 
-        # if MsgID.STATE is rec'd before MsgID.GLOBAL_POSITION don't want to set_home_position
+        # if MsgID.STATE is received before MsgID.GLOBAL_POSITION don't want to set_home_position(0,0,0)
         if self.global_position[NORTH] == 0.0 and self.global_position[EAST] == 0.0:
             print("no global position data, wait")
             return
