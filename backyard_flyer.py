@@ -46,12 +46,13 @@ class BackyardFlyer(Drone):
     def local_position_callback(self):
         # code starting point is up_and_down.py from Lesson: "Project: Backyard Flyer, #11"
         if self.flight_state == States.TAKEOFF:
-
             # coordinate conversion
             altitude = -1.0 * self.local_position[DOWN]
-
             # check if altitude is within 95% of target
             if altitude > 0.95 * self.target_position[ALT]:
+                self.all_waypoints = self.calculate_box()
+                self.waypoint_transition()
+        elif self.flight_state == States.WAYPOINT:
                 self.landing_transition()
 
 
@@ -76,11 +77,8 @@ class BackyardFlyer(Drone):
                 self.manual_transition()
 
     def calculate_box(self):
-        """TODO: Fill out this method
-        
-        1. Return waypoints to fly a box
-        """
-        pass
+        # Waypoints are dimensions NORTH, EAST, ALT
+        return [[0.0, 11.11, 3.0], [11.11, 11.11, 3.0], [11.11, 0.0, 3.0], [0.0, 0.0, 3.0]]
 
     def arming_transition(self):
         # code starting point is up_and_down.py from Lesson: "Project: Backyard Flyer, #11"
@@ -118,6 +116,8 @@ class BackyardFlyer(Drone):
         2. Transition to WAYPOINT state
         """
         print("waypoint transition")
+        self.target_position = self.all_waypoints.pop(0)
+        self.flight_state = States.WAYPOINT
 
     def landing_transition(self):
         print("landing transition")
