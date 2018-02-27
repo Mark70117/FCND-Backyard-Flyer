@@ -17,6 +17,9 @@ LON=0
 LAT=1
 ALT=2
 
+WAYPOINT_DELTA=0.2
+PRELAND_VEL=0.2
+
 class States(Enum):
     MANUAL = 0
     ARMING = 1
@@ -38,7 +41,6 @@ class BackyardFlyer(Drone):
         # initial state
         self.flight_state = States.MANUAL
 
-        # TODO: Register all your callbacks here
         self.register_callback(MsgID.LOCAL_POSITION, self.local_position_callback)
         self.register_callback(MsgID.LOCAL_VELOCITY, self.velocity_callback)
         self.register_callback(MsgID.STATE, self.state_callback)
@@ -53,7 +55,12 @@ class BackyardFlyer(Drone):
                 self.all_waypoints = self.calculate_box()
                 self.waypoint_transition()
         elif self.flight_state == States.WAYPOINT:
-                self.landing_transition()
+            if np.linalg.norm(self.target_position[NORTH:EAST+1] - self.local_position[NORTH:EAST+1]) < WAYPOINT_DELTA:
+                if len(self.all_waypoints) > 0:
+                    self.waypoint_transition()
+                else:
+                    if np.linalg.norm(self.local_velocity[NORTH:EAST+1]) < PRELAND_VEL:
+                        self.landing_transition()
 
 
     def velocity_callback(self):
@@ -117,6 +124,8 @@ class BackyardFlyer(Drone):
         """
         print("waypoint transition")
         self.target_position = self.all_waypoints.pop(0)
+        print("waypoint next target", self.target_position)
+        self.cmd_position(self.target_position[NORTH], self.target_position[EAST], self.target_position[ALT], 0.0)
         self.flight_state = States.WAYPOINT
 
     def landing_transition(self):
