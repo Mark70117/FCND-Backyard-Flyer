@@ -9,6 +9,14 @@ from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa
 from udacidrone.messaging import MsgID
 
 
+NORTH=0
+EAST=1
+DOWN=2
+
+LON=0
+LAT=1
+ALT=2
+
 class States(Enum):
     MANUAL = 0
     ARMING = 1
@@ -40,18 +48,18 @@ class BackyardFlyer(Drone):
         if self.flight_state == States.TAKEOFF:
 
             # coordinate conversion
-            altitude = -1.0 * self.local_position[2]
+            altitude = -1.0 * self.local_position[DOWN]
 
             # check if altitude is within 95% of target
-            if altitude > 0.95 * self.target_position[2]:
+            if altitude > 0.95 * self.target_position[ALT]:
                 self.landing_transition()
 
 
     def velocity_callback(self):
         # code starting point is up_and_down.py from Lesson: "Project: Backyard Flyer, #11"
         if self.flight_state == States.LANDING:
-            if ((self.global_position[2] - self.global_home[2] < 0.1) and
-            abs(self.local_position[2]) < 0.01):
+            if ((self.global_position[ALT] - self.global_home[ALT] < 0.1) and
+            abs(self.local_position[DOWN]) < 0.01):
                 self.disarming_transition()
 
     def state_callback(self):
@@ -79,7 +87,7 @@ class BackyardFlyer(Drone):
         print("arming transition")
 
         # if MsgID.STATE is rec'd before MsgID.GLOBAL_POSITION don't want to set_home_position
-        if self.global_position[0] == 0.0 and self.global_position[1] == 0.0:
+        if self.global_position[NORTH] == 0.0 and self.global_position[EAST] == 0.0:
             print("no global position data, wait")
             return
 
@@ -87,9 +95,9 @@ class BackyardFlyer(Drone):
         self.arm()
 
         # set the current location to be the home position
-        self.set_home_position(self.global_position[0],
-                               self.global_position[1],
-                               self.global_position[2])
+        self.set_home_position(self.global_position[LON],
+                               self.global_position[LAT],
+                               self.global_position[ALT])
 
         self.flight_state = States.ARMING
 
@@ -98,7 +106,7 @@ class BackyardFlyer(Drone):
         # code starting point is up_and_down.py from Lesson: "Project: Backyard Flyer, #11"
         print("takeoff transition")
         target_altitude = 3.0
-        self.target_position[2] = target_altitude
+        self.target_position[ALT] = target_altitude
         self.takeoff(target_altitude)
         self.flight_state = States.TAKEOFF
 
